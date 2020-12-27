@@ -12,6 +12,7 @@ import com.mojang.serialization.Lifecycle;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.screen.*;
 import net.minecraft.client.gui.toasts.SystemToast;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -29,6 +30,8 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.gen.settings.DimensionGeneratorSettings;
 import net.minecraftforge.fml.loading.FMLPaths;
+import org.lwjgl.PointerBuffer;
+import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
@@ -60,101 +63,40 @@ public class CustomWorldTypesScreen extends Screen {
     }
 
 
-    public static CustomWorldTypesScreen create(@Nullable WorldSelectionScreen parent) {
-        return new CustomWorldTypesScreen(CreateWorldScreen.func_243425_a(parent));
+    public static CustomWorldTypesScreen create(@Nullable CreateWorldScreen parent) {
+        return new CustomWorldTypesScreen(parent);
     }
 
-
-    @Override
-    protected void init() {
-        this.addButton(new Button(this.width / 2 + 55, this.height - 30, 150, 20, new TranslationTextComponent("Use Default World Screen"), (button) -> {
-            this.getMinecraft().displayGuiScreen(CreateWorldScreen.func_243425_a(this));
-        }));
-
-        CONFIG_PATH.toFile().mkdirs();
-
-        this.importedSettingsList = new ImportedSettingsList(this.minecraft, this.width, this.height, 48, this.height - 64, 36, CONFIG_PATH);
-        this.children.add(this.importedSettingsList);
-        ImportedSettingsList.ImportSettingsEntry entry = this.importedSettingsList.getEventListeners().stream().findFirst().orElse(null);
-        this.importedSettingsList.setSelected(entry);
-
-        this.addButton(new Button(this.width / 2 - 154, this.height - 52, 150, 20, new TranslationTextComponent("selectWorld.select"), (button) -> {
-            this.importedSettingsList.getOptionalForSelected().ifPresent(importSettingsEntry -> executeWorldSettingsImport(this.getMinecraft(), importSettingsEntry.generatorSettingsPath));
-        }));
-    }
-
+//
+//    @Override
+//    protected void init() {
+//        this.addButton(new Button(this.width / 2 + 55, this.height - 30, 150, 20, new TranslationTextComponent("Use Default World Screen"), (button) -> {
+//            this.getMinecraft().displayGuiScreen(CreateWorldScreen.func_243425_a(this));
+//        }));
+//
+//        CONFIG_PATH.toFile().mkdirs();
+//
+//        this.importedSettingsList = new ImportedSettingsList(this.minecraft, this.width, this.height, 48, this.height - 64, 36, CONFIG_PATH);
+//        this.children.add(this.importedSettingsList);
+//        ImportedSettingsList.ImportSettingsEntry entry = this.importedSettingsList.getEventListeners().stream().findFirst().orElse(null);
+//        this.importedSettingsList.setSelected(entry);
+//
+//        this.addButton(new Button(this.width / 2 - 154, this.height - 52, 150, 20, new TranslationTextComponent("selectWorld.select"), (button) -> {
+//            this.importedSettingsList.getOptionalForSelected().ifPresent(importSettingsEntry -> executeWorldSettingsImport(this.getMinecraft(), importSettingsEntry.generatorSettingsPath));
+//        }));
+//    }
+//
 
     @Override
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(matrixStack);
-        this.importedSettingsList.render(matrixStack, mouseX, mouseY, partialTicks);
+
         super.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
     @Override
     public boolean shouldCloseOnEsc() {
         return true;
-    }
-
-    private void executeWorldSettingsImport(Minecraft minecraft, @Nullable String dimensionJsonPath) {
-        if (dimensionJsonPath != null) {
-            DynamicRegistries.Impl dynamicregistries$impl = DynamicRegistries.func_239770_b_();
-
-            ResourcePackList resourcepacklist = new ResourcePackList(new ServerPackFinder(), new FolderPackFinder(savePath().toFile(), IPackNameDecorator.WORLD));
-
-            DataPackRegistries datapackregistries;
-            try {
-                MinecraftServer.func_240772_a_(resourcepacklist, datapackCodec, false);
-                CompletableFuture<DataPackRegistries> completablefuture = DataPackRegistries.func_240961_a_(resourcepacklist.func_232623_f_(), Commands.EnvironmentType.INTEGRATED, 2, Util.getServerExecutor(), minecraft);
-                minecraft.driveUntil(completablefuture::isDone);
-                datapackregistries = completablefuture.get();
-            } catch (ExecutionException | InterruptedException interruptedexception) {
-                ExampleMod.LOGGER.error("Error loading data packs when importing world settings", interruptedexception);
-                ITextComponent itextcomponent = new TranslationTextComponent("selectWorld.import_worldgen_settings.failure");
-                ITextComponent itextcomponent1 = new StringTextComponent(interruptedexception.getMessage());
-                minecraft.getToastGui().add(SystemToast.func_238534_a_(minecraft, SystemToast.Type.WORLD_GEN_SETTINGS_TRANSFER, itextcomponent, itextcomponent1));
-                resourcepacklist.close();
-                return;
-            }
-
-            WorldSettingsImport<JsonElement> worldsettingsimport = WorldSettingsImport.create(JsonOps.INSTANCE, datapackregistries.getResourceManager(), dynamicregistries$impl);
-            JsonParser jsonparser = new JsonParser();
-
-            DataResult<DimensionGeneratorSettings> dataresult;
-            try (BufferedReader bufferedreader = Files.newBufferedReader(Paths.get(dimensionJsonPath))) {
-                JsonElement jsonelement = jsonparser.parse(bufferedreader);
-                dataresult = DimensionGeneratorSettings.field_236201_a_.parse(worldsettingsimport, jsonelement);
-            } catch (JsonIOException | JsonSyntaxException | IOException ioexception) {
-                dataresult = DataResult.error("Failed to parse file: " + ioexception.getMessage());
-            }
-
-            if (dataresult.error().isPresent()) {
-                ITextComponent itextcomponent2 = new TranslationTextComponent("selectWorld.import_worldgen_settings.failure");
-                String s1 = dataresult.error().get().message();
-                ExampleMod.LOGGER.error("Error parsing world settings: {}", s1);
-                ITextComponent itextcomponent3 = new StringTextComponent(s1);
-                minecraft.getToastGui().add(SystemToast.func_238534_a_(minecraft, SystemToast.Type.WORLD_GEN_SETTINGS_TRANSFER, itextcomponent2, itextcomponent3));
-            }
-
-            datapackregistries.close();
-            Lifecycle lifecycle = dataresult.lifecycle();
-            dataresult.resultOrPartial(ExampleMod.LOGGER::error).ifPresent((p_239046_5_) -> {
-                BooleanConsumer booleanconsumer = (p_239045_5_) -> {
-                    minecraft.displayGuiScreen(this);
-                    if (p_239045_5_) {
-                        this.upgradeWorldData(dynamicregistries$impl, p_239046_5_);
-                    }
-
-                };
-                if (lifecycle == Lifecycle.stable()) {
-                    this.upgradeWorldData(dynamicregistries$impl, p_239046_5_);
-                } else if (lifecycle == Lifecycle.experimental()) {
-                    minecraft.displayGuiScreen(new ConfirmScreen(booleanconsumer, new TranslationTextComponent("selectWorld.import_worldgen_settings.experimental.title"), new TranslationTextComponent("selectWorld.import_worldgen_settings.experimental.question")));
-                } else {
-                    minecraft.displayGuiScreen(new ConfirmScreen(booleanconsumer, new TranslationTextComponent("selectWorld.import_worldgen_settings.deprecated.title"), new TranslationTextComponent("selectWorld.import_worldgen_settings.deprecated.question")));
-                }
-            });
-        }
     }
 
 
@@ -184,10 +126,10 @@ public class CustomWorldTypesScreen extends Screen {
     }
 
 
-    public class ImportedSettingsList extends ExtendedList<ImportedSettingsList.ImportSettingsEntry> {
-        public ImportedSettingsList(Minecraft mcIn, int widthIn, int heightIn, int topIn, int bottomIn, int slotHeightIn, Path configPath) {
+    public static class ImportedSettingsList extends ExtendedList<ImportedSettingsList.ImportSettingsEntry> {
+        public ImportedSettingsList(Minecraft mcIn, int widthIn, int heightIn, int topIn, int bottomIn, int slotHeightIn, Path configPath, FontRenderer fontRenderer) {
             super(mcIn, widthIn, heightIn, topIn, bottomIn, slotHeightIn);
-            this.addEntry(new ImportSettingsEntry("name1", "description", configPath.resolve("test_worldsettings.json").toString()));
+            this.addEntry(new ImportSettingsEntry("name1", "description", configPath.resolve("test_worldsettings.json").toString(), fontRenderer, this));
         }
 
         public Optional<ImportedSettingsList.ImportSettingsEntry> getOptionalForSelected() {
@@ -195,28 +137,32 @@ public class CustomWorldTypesScreen extends Screen {
         }
 
 
-        public class ImportSettingsEntry extends ExtendedList.AbstractListEntry<ImportSettingsEntry> {
+        public static class ImportSettingsEntry extends ExtendedList.AbstractListEntry<ImportSettingsEntry> {
             private final String name;
             private final String description;
-            private final String generatorSettingsPath;
+            public final String generatorSettingsPath;
+            private FontRenderer fontRenderer;
+            private ExtendedList<ImportSettingsEntry> parent;
 
-            public ImportSettingsEntry(String worldTypeName, String description, String generatorSettingsPath) {
+            public ImportSettingsEntry(String worldTypeName, String description, String generatorSettingsPath, FontRenderer fontRenderer, ExtendedList<ImportSettingsEntry> parent) {
                 this.name = worldTypeName;
                 this.description = description;
                 this.generatorSettingsPath = generatorSettingsPath;
+                this.fontRenderer = fontRenderer;
+                this.parent = parent;
             }
 
             @Override
             public void render(MatrixStack stack, int i, int x, int text, int i2, int i3, int i4, int i5, boolean b, float f) {
-                AbstractGui.drawString(stack, CustomWorldTypesScreen.this.font, this.name, text, x, 16777215);
-                AbstractGui.drawString(stack, CustomWorldTypesScreen.this.font, this.description, text + 5, x - 25, 12632256);
+                AbstractGui.drawString(stack, fontRenderer, this.name, text, x, 16777215);
+                AbstractGui.drawString(stack, fontRenderer, this.description, text + 5, x - 25, 12632256);
 
             }
 
             @Override
             public boolean mouseClicked(double mouseX, double mouseY, int button) {
                 if (button == 0) {
-                    CustomWorldTypesScreen.ImportedSettingsList.this.setSelected(this);
+                    parent.setSelected(this);
                     return true;
                 } else {
                     return false;

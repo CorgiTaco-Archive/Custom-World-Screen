@@ -4,10 +4,10 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "examplemod.refmap.json",
   "mixins": [
-    "CreateWorldScreenMixin"
+    "access.CreateWorldScreenAccess"
   ],
   "client": [
-    "MixinCreateWorldScreen"
+    "MixinWorldOptionsScreen"
   ],
   "injectors": {
     "defaultRequire": 1
