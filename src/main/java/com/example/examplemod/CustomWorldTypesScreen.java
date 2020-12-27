@@ -51,8 +51,8 @@ public class CustomWorldTypesScreen extends Screen {
     private OptionalLong seed;
     private TextFieldWidget seedTextField;
     private Path temporaryDataPackDirectory;
-    protected DatapackCodec datapackCodec;
-
+    protected DatapackCodec datapackCodec = DatapackCodec.VANILLA_CODEC;
+    public static final Path CONFIG_PATH = FMLPaths.CONFIGDIR.get().resolve("csw");
 
     protected CustomWorldTypesScreen(CreateWorldScreen parent) {
         super(ITextComponent.getTextComponentOrEmpty("cwts.title"));
@@ -71,7 +71,9 @@ public class CustomWorldTypesScreen extends Screen {
             this.getMinecraft().displayGuiScreen(CreateWorldScreen.func_243425_a(this));
         }));
 
-        this.importedSettingsList = new ImportedSettingsList(this.minecraft, this.width, this.height, 48, this.height - 64, 36);
+        CONFIG_PATH.toFile().mkdirs();
+
+        this.importedSettingsList = new ImportedSettingsList(this.minecraft, this.width, this.height, 48, this.height - 64, 36, CONFIG_PATH);
         this.children.add(this.importedSettingsList);
         ImportedSettingsList.ImportSettingsEntry entry = this.importedSettingsList.getEventListeners().stream().findFirst().orElse(null);
         this.importedSettingsList.setSelected(entry);
@@ -97,6 +99,7 @@ public class CustomWorldTypesScreen extends Screen {
     private void executeWorldSettingsImport(Minecraft minecraft, @Nullable String dimensionJsonPath) {
         if (dimensionJsonPath != null) {
             DynamicRegistries.Impl dynamicregistries$impl = DynamicRegistries.func_239770_b_();
+
             ResourcePackList resourcepacklist = new ResourcePackList(new ServerPackFinder(), new FolderPackFinder(savePath().toFile(), IPackNameDecorator.WORLD));
 
             DataPackRegistries datapackregistries;
@@ -159,7 +162,7 @@ public class CustomWorldTypesScreen extends Screen {
         this.dynamicRegistries = dynamicRegistries;
         this.dimensionGeneratorSettings = generatorSettings;
         this.seed = OptionalLong.of(generatorSettings.getSeed());
-        this.seedTextField.setText(seedToString(this.seed));
+//        this.seedTextField.setText(seedToString(this.seed));
     }
 
     protected Path savePath() {
@@ -182,12 +185,9 @@ public class CustomWorldTypesScreen extends Screen {
 
 
     public class ImportedSettingsList extends ExtendedList<ImportedSettingsList.ImportSettingsEntry> {
-        public ImportedSettingsList(Minecraft mcIn, int widthIn, int heightIn, int topIn, int bottomIn, int slotHeightIn) {
+        public ImportedSettingsList(Minecraft mcIn, int widthIn, int heightIn, int topIn, int bottomIn, int slotHeightIn, Path configPath) {
             super(mcIn, widthIn, heightIn, topIn, bottomIn, slotHeightIn);
-            this.addEntry(new ImportSettingsEntry("name1", "description", FMLPaths.CONFIGDIR.get().resolve("csw").resolve("derp.json").toString()));
-            this.addEntry(new ImportSettingsEntry("name1", "description", FMLPaths.CONFIGDIR.get().resolve("csw").resolve("derp.json").toString()));
-            this.addEntry(new ImportSettingsEntry("name1", "description", FMLPaths.CONFIGDIR.get().resolve("csw").resolve("derp.json").toString()));
-            this.addEntry(new ImportSettingsEntry("name1", "description", FMLPaths.CONFIGDIR.get().resolve("csw").resolve("derp.json").toString()));
+            this.addEntry(new ImportSettingsEntry("name1", "description", configPath.resolve("test_worldsettings.json").toString()));
         }
 
         public Optional<ImportedSettingsList.ImportSettingsEntry> getOptionalForSelected() {
