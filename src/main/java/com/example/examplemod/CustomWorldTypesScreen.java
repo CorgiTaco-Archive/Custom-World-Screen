@@ -2,6 +2,7 @@ package com.example.examplemod;
 
 import net.minecraft.client.gui.screen.CreateWorldScreen;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.WorldSelectionScreen;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -10,15 +11,15 @@ import javax.annotation.Nullable;
 
 public class CustomWorldTypesScreen extends Screen {
 
-    private final Screen parent;
+    private final WorldSelectionScreen parent;
 
-    protected CustomWorldTypesScreen(Screen parent) {
+    protected CustomWorldTypesScreen(WorldSelectionScreen parent) {
         super(ITextComponent.getTextComponentOrEmpty("cwts.title"));
         this.parent = parent;
     }
 
 
-    public static CustomWorldTypesScreen create(@Nullable Screen parent) {
+    public static CustomWorldTypesScreen create(@Nullable WorldSelectionScreen parent) {
         return new CustomWorldTypesScreen(parent);
     }
 
@@ -29,14 +30,8 @@ public class CustomWorldTypesScreen extends Screen {
         }));
     }
 
-
     @Override
     public boolean shouldCloseOnEsc() {
         return true;
-    }
-
-    @Override
-    public void closeScreen() {
-        this.getMinecraft().displayGuiScreen(this.parent);
     }
 }
