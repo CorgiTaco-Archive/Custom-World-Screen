@@ -4,9 +4,10 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "examplemod.refmap.json",
   "mixins": [
-  ],
-  "client":[
     "CreateWorldScreenMixin"
+  ],
+  "client": [
+    "MixinCreateWorldScreen"
   ],
   "injectors": {
     "defaultRequire": 1

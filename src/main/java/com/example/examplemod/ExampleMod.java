@@ -17,7 +17,7 @@ public class ExampleMod {
 
     public static final String MODID = "examplemod";
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    public static final Logger LOGGER = LogManager.getLogger();
 
     public ExampleMod() {
         // Register the setup method for modloading
