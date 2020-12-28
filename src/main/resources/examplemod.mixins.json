@@ -7,7 +7,8 @@
     "access.CreateWorldScreenAccess"
   ],
   "client": [
-    "MixinWorldOptionsScreen"
+    "MixinWorldOptionsScreen",
+    "MixinCreateWorldScreen"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -113,7 +113,7 @@ public class CustomWorldTypesScreen extends Screen {
                 this.temporaryDataPackDirectory = Files.createTempDirectory("mcworld-");
             } catch (IOException ioexception) {
                 ExampleMod.LOGGER.warn("Failed to create temporary dir", ioexception);
-                SystemToast.func_238539_c_(this.getMinecraft(), ((CreateWorldScreenGetter) this.parent).getSaveDirName());
+//                SystemToast.func_238539_c_(this.getMinecraft(), ((CreateWorldScreenGetter) this.parent).getSaveDirName());
                 this.parent.func_243430_k();
             }
         }
@@ -129,7 +129,7 @@ public class CustomWorldTypesScreen extends Screen {
     public static class ImportedSettingsList extends ExtendedList<ImportedSettingsList.ImportSettingsEntry> {
         public ImportedSettingsList(Minecraft mcIn, int widthIn, int heightIn, int topIn, int bottomIn, int slotHeightIn, Path configPath, FontRenderer fontRenderer) {
             super(mcIn, widthIn, heightIn, topIn, bottomIn, slotHeightIn);
-            this.addEntry(new ImportSettingsEntry("name1", "description", configPath.resolve("test_worldsettings.json").toString(), fontRenderer, this));
+            this.addEntry(new ImportSettingsEntry("Nether Overworld", "Swaps Nether & Overworld dimensions", configPath.resolve("nether_overworld.json").toString(), fontRenderer, this));
         }
 
         public Optional<ImportedSettingsList.ImportSettingsEntry> getOptionalForSelected() {
@@ -154,9 +154,8 @@ public class CustomWorldTypesScreen extends Screen {
 
             @Override
             public void render(MatrixStack stack, int i, int x, int text, int i2, int i3, int i4, int i5, boolean b, float f) {
-                AbstractGui.drawString(stack, fontRenderer, this.name, text, x, 16777215);
-                AbstractGui.drawString(stack, fontRenderer, this.description, text + 5, x - 25, 12632256);
-
+                AbstractGui.drawString(stack, fontRenderer, this.name + " - " + description, text, x, 16777215);
+                AbstractGui.drawString(stack, fontRenderer, this.name + " - " + description, text, x, 16777215);
             }
 
             @Override

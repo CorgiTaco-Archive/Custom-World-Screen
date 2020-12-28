@@ -1,6 +1,9 @@
 package com.example.examplemod.getters;
 
-public interface CreateWorldScreenGetter {
+import net.minecraft.client.gui.widget.button.Button;
 
-    String getSaveDirName();
+public interface CreateWorldScreenGetter {
+    Button getCreateWorldScreenButton();
+
+    Button getMoreOptionsButton();
 }
